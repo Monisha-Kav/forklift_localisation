@@ -1,0 +1,22 @@
+# Normal world-fixed markers
+6:
+  position: [1.0, 1.0]
+  yaw: 0.0
+2:
+  position: [2.0, 3.5]
+  yaw: 1.57
+3:
+  position: [1.0, 1.0]
+  yaw: 0.0
+4:
+  position: [0.42, -0.42]
+  yaw: 1.57
+  
+1:
+  position: [1.0, 1.0]
+  yaw: 0.0
+
+# Special crate marker (ID 6)
+5:
+  goal: [0.5, 0.5]  # This is the destination the robot must go to
+
