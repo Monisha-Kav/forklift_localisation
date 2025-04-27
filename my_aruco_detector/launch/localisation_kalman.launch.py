@@ -12,8 +12,8 @@ def generate_launch_description():
         ),
         Node(
             package='my_aruco_detector',
-            executable='sensor_fusion_node',
-            name='sensor_fusion',
+            executable='simple_kalman_fusion',
+            name='simple_kalman_fusion',
             output='screen'
         ),
         Node(

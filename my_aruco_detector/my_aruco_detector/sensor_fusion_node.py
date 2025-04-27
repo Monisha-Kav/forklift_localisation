@@ -30,7 +30,7 @@ class SensorFusionNode(Node):
         self.pose_pub = self.create_publisher(PoseStamped, '/fused_pose', 10)
 
         # Subscriptions
-        self.create_subscription(Imu, '/imu', self.imu_callback, 10)
+        self.create_subscription(Imu, '/imu/calibrated', self.imu_callback, 10)
         self.create_subscription(PoseStamped, '/marker_pose', self.marker_callback, 10)
 
         # Continuous update timer (Bayes prediction step)
