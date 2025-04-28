@@ -4,6 +4,12 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
+         Node(
+            package='my_aruco_detector',
+            executable='imu_calibration_node',
+            name='imu_calibration_node',
+            output='screen'
+        ),
         Node(
             package='my_aruco_detector',
             executable='marker_pose_localise',
