@@ -26,7 +26,6 @@ setup(
             	'sensor_fusion_node = my_aruco_detector.sensor_fusion_node:main',
             	'sensor_fusion_node_fixed = my_aruco_detector.sensor_fusion_node_fixed:main',
             	'simple_kalman_fusion = my_aruco_detector.simple_kalman_fusion:main',
-            	'direction_gui = my_aruco_detector.direction_gui:main',
             	'forklift_display= my_aruco_detector.forklift_display:main' ,
             	'imu_calibration=my_aruco_detector.imu_calibration_node:main',
         ],
