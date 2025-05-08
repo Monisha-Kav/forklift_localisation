@@ -1,0 +1,90 @@
+[0.033s] Invoking command in '/home/monisha/simulation_ws/build/aruco': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/monisha/turtlebot3_ws/install/turtlebot3_teleop:/home/monisha/turtlebot3_ws/install/turtlebot3_example:/home/monisha/turtlebot3_ws/install/my_aruco_detector:/home/monisha/install/turtlebot3_teleop:/home/monisha/install/turtlebot3_example:/home/monisha/install/launch_testing_examples:/home/monisha/install/examples_rclpy_pointcloud_publisher:/home/monisha/install/examples_rclpy_minimal_subscriber:/home/monisha/install/examples_rclpy_minimal_service:/home/monisha/install/examples_rclpy_minimal_publisher:/home/monisha/install/examples_rclpy_minimal_client:/home/monisha/install/examples_rclpy_minimal_action_server:/home/monisha/install/examples_rclpy_minimal_action_client:/home/monisha/install/examples_rclpy_guard_conditions:/home/monisha/install/examples_rclpy_executors:/opt/ros/humble /usr/bin/cmake /home/monisha/simulation_ws/src/aruco_ros/aruco -DCMAKE_INSTALL_PREFIX=/home/monisha/simulation_ws/install/aruco
+[0.129s] -- The C compiler identification is GNU 11.4.0
+[0.209s] -- The CXX compiler identification is GNU 11.4.0
+[0.220s] -- Detecting C compiler ABI info
+[0.331s] -- Detecting C compiler ABI info - done
+[0.346s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.347s] -- Detecting C compile features
+[0.347s] -- Detecting C compile features - done
+[0.352s] -- Detecting CXX compiler ABI info
+[0.486s] -- Detecting CXX compiler ABI info - done
+[0.501s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.501s] -- Detecting CXX compile features
+[0.502s] -- Detecting CXX compile features - done
+[0.510s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.822s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.059s] -- Found OpenCV: /usr (found suitable version "4.5.4", minimum required is "4.2.0") 
+[1.163s] -- Configuring done
+[1.173s] -- Generating done
+[1.176s] -- Build files have been written to: /home/monisha/simulation_ws/build/aruco
+[1.181s] Invoked command in '/home/monisha/simulation_ws/build/aruco' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/monisha/turtlebot3_ws/install/turtlebot3_teleop:/home/monisha/turtlebot3_ws/install/turtlebot3_example:/home/monisha/turtlebot3_ws/install/my_aruco_detector:/home/monisha/install/turtlebot3_teleop:/home/monisha/install/turtlebot3_example:/home/monisha/install/launch_testing_examples:/home/monisha/install/examples_rclpy_pointcloud_publisher:/home/monisha/install/examples_rclpy_minimal_subscriber:/home/monisha/install/examples_rclpy_minimal_service:/home/monisha/install/examples_rclpy_minimal_publisher:/home/monisha/install/examples_rclpy_minimal_client:/home/monisha/install/examples_rclpy_minimal_action_server:/home/monisha/install/examples_rclpy_minimal_action_client:/home/monisha/install/examples_rclpy_guard_conditions:/home/monisha/install/examples_rclpy_executors:/opt/ros/humble /usr/bin/cmake /home/monisha/simulation_ws/src/aruco_ros/aruco -DCMAKE_INSTALL_PREFIX=/home/monisha/simulation_ws/install/aruco
+[1.185s] Invoking command in '/home/monisha/simulation_ws/build/aruco': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/monisha/turtlebot3_ws/install/turtlebot3_teleop:/home/monisha/turtlebot3_ws/install/turtlebot3_example:/home/monisha/turtlebot3_ws/install/my_aruco_detector:/home/monisha/install/turtlebot3_teleop:/home/monisha/install/turtlebot3_example:/home/monisha/install/launch_testing_examples:/home/monisha/install/examples_rclpy_pointcloud_publisher:/home/monisha/install/examples_rclpy_minimal_subscriber:/home/monisha/install/examples_rclpy_minimal_service:/home/monisha/install/examples_rclpy_minimal_publisher:/home/monisha/install/examples_rclpy_minimal_client:/home/monisha/install/examples_rclpy_minimal_action_server:/home/monisha/install/examples_rclpy_minimal_action_client:/home/monisha/install/examples_rclpy_guard_conditions:/home/monisha/install/examples_rclpy_executors:/opt/ros/humble /usr/bin/cmake --build /home/monisha/simulation_ws/build/aruco -- -j12 -l12
+[1.285s] [  5%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/cvdrawingutils.cpp.o[0m
+[1.286s] [ 11%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/debug.cpp.o[0m
+[1.289s] [ 22%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/ippe.cpp.o[0m
+[1.290s] [ 22%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/dictionary.cpp.o[0m
+[1.290s] [ 33%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/cameraparameters.cpp.o[0m
+[1.290s] [ 33%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/fractaldetector.cpp.o[0m
+[1.290s] [ 38%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/marker.cpp.o[0m
+[1.290s] [ 44%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/dictionary_based.cpp.o[0m
+[1.292s] [ 50%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/markerdetector_impl.cpp.o[0m
+[1.293s] [ 55%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/markerdetector.cpp.o[0m
+[1.306s] [ 61%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/markermap.cpp.o[0m
+[1.308s] [ 66%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/markerlabeler.cpp.o[0m
+[2.595s] [ 72%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/posetracker.cpp.o[0m
+[4.215s] [ 77%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/fractallabelers/fractallabeler.cpp.o[0m
+[4.694s] [ 83%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/fractallabelers/fractalmarker.cpp.o[0m
+[4.823s] [ 88%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/fractallabelers/fractalmarkerset.cpp.o[0m
+[5.071s] [ 94%] [32mBuilding CXX object CMakeFiles/aruco.dir/src/aruco/fractallabelers/fractalposetracker.cpp.o[0m
+[12.880s] [100%] [32m[1mLinking CXX shared library libaruco.so[0m
+[13.219s] [100%] Built target aruco
+[13.233s] Invoked command in '/home/monisha/simulation_ws/build/aruco' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/monisha/turtlebot3_ws/install/turtlebot3_teleop:/home/monisha/turtlebot3_ws/install/turtlebot3_example:/home/monisha/turtlebot3_ws/install/my_aruco_detector:/home/monisha/install/turtlebot3_teleop:/home/monisha/install/turtlebot3_example:/home/monisha/install/launch_testing_examples:/home/monisha/install/examples_rclpy_pointcloud_publisher:/home/monisha/install/examples_rclpy_minimal_subscriber:/home/monisha/install/examples_rclpy_minimal_service:/home/monisha/install/examples_rclpy_minimal_publisher:/home/monisha/install/examples_rclpy_minimal_client:/home/monisha/install/examples_rclpy_minimal_action_server:/home/monisha/install/examples_rclpy_minimal_action_client:/home/monisha/install/examples_rclpy_guard_conditions:/home/monisha/install/examples_rclpy_executors:/opt/ros/humble /usr/bin/cmake --build /home/monisha/simulation_ws/build/aruco -- -j12 -l12
+[13.236s] Invoking command in '/home/monisha/simulation_ws/build/aruco': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/monisha/turtlebot3_ws/install/turtlebot3_teleop:/home/monisha/turtlebot3_ws/install/turtlebot3_example:/home/monisha/turtlebot3_ws/install/my_aruco_detector:/home/monisha/install/turtlebot3_teleop:/home/monisha/install/turtlebot3_example:/home/monisha/install/launch_testing_examples:/home/monisha/install/examples_rclpy_pointcloud_publisher:/home/monisha/install/examples_rclpy_minimal_subscriber:/home/monisha/install/examples_rclpy_minimal_service:/home/monisha/install/examples_rclpy_minimal_publisher:/home/monisha/install/examples_rclpy_minimal_client:/home/monisha/install/examples_rclpy_minimal_action_server:/home/monisha/install/examples_rclpy_minimal_action_client:/home/monisha/install/examples_rclpy_guard_conditions:/home/monisha/install/examples_rclpy_executors:/opt/ros/humble /usr/bin/cmake --install /home/monisha/simulation_ws/build/aruco
+[13.244s] -- Install configuration: ""
+[13.245s] -- Installing: /home/monisha/simulation_ws/install/aruco/lib/libaruco.so
+[13.248s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include
+[13.248s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco
+[13.248s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/markerlabeler.h
+[13.248s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/markerdetector.h
+[13.248s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/markerdetector_impl.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/timers.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/aruco_cvversioning.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/cameraparameters.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/debug.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/markermap.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/ippe.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/dictionary.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/levmarq.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/cvdrawingutils.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/picoflann.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/dictionary_based.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/marker.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/aruco_export.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/fractaldetector.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/fractallabelers
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/fractallabelers/fractalmarkerset.h
+[13.249s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/fractallabelers/fractalposetracker.h
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/fractallabelers/fractalmarker.h
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/fractallabelers/fractallabeler.h
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/posetracker.h
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/include/aruco/aruco.h
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/share/aruco/environment/library_path.sh
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/environment/library_path.dsv
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/ament_index/resource_index/package_run_dependencies/aruco
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/ament_index/resource_index/parent_prefix_path/aruco
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/share/aruco/environment/ament_prefix_path.sh
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/environment/ament_prefix_path.dsv
+[13.250s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/share/aruco/environment/path.sh
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/environment/path.dsv
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/local_setup.bash
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/local_setup.sh
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/local_setup.zsh
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/local_setup.dsv
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/package.dsv
+[13.250s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/ament_index/resource_index/packages/aruco
+[13.251s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/cmake/ament_cmake_export_include_directories-extras.cmake
+[13.251s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/cmake/ament_cmake_export_libraries-extras.cmake
+[13.251s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/cmake/arucoConfig.cmake
+[13.251s] -- Installing: /home/monisha/simulation_ws/install/aruco/share/aruco/cmake/arucoConfig-version.cmake
+[13.251s] -- Up-to-date: /home/monisha/simulation_ws/install/aruco/share/aruco/package.xml
+[13.252s] Invoked command in '/home/monisha/simulation_ws/build/aruco' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/monisha/turtlebot3_ws/install/turtlebot3_teleop:/home/monisha/turtlebot3_ws/install/turtlebot3_example:/home/monisha/turtlebot3_ws/install/my_aruco_detector:/home/monisha/install/turtlebot3_teleop:/home/monisha/install/turtlebot3_example:/home/monisha/install/launch_testing_examples:/home/monisha/install/examples_rclpy_pointcloud_publisher:/home/monisha/install/examples_rclpy_minimal_subscriber:/home/monisha/install/examples_rclpy_minimal_service:/home/monisha/install/examples_rclpy_minimal_publisher:/home/monisha/install/examples_rclpy_minimal_client:/home/monisha/install/examples_rclpy_minimal_action_server:/home/monisha/install/examples_rclpy_minimal_action_client:/home/monisha/install/examples_rclpy_guard_conditions:/home/monisha/install/examples_rclpy_executors:/opt/ros/humble /usr/bin/cmake --install /home/monisha/simulation_ws/build/aruco
