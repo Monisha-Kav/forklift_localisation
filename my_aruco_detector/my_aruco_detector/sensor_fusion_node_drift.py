@@ -34,6 +34,7 @@ class SensorFusionNode(Node):
 		now = self.get_clock().now()
 		dt = (now - self.last_time).nanoseconds * 1e-9
 		self.last_time = now
+		v = 0.0
 
 		if dt <= 0 or dt > 1:
 			return  # ignore bad timing
@@ -43,9 +44,9 @@ class SensorFusionNode(Node):
 		x, y, theta = self.state
 		self.get_logger().info(f"[PREDICT] pose → x: {x:.2f}, y: {y:.2f}, yaw: {theta:.2f} rad")
 
-
+			
 		theta = self.state[2]
-		v = self.ax * dt
+		v += self.ax * dt
 		dx = v * np.cos(theta) * dt
 		dy = v * np.sin(theta) * dt
 		dtheta = self.omega * dt

@@ -4,6 +4,12 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
+         Node(
+            package='my_aruco_detector',
+            executable='imu_calibration_node',
+            name='imu_calibration_node',
+            output='screen'
+        ),
         Node(
             package='my_aruco_detector',
             executable='marker_pose_localise',
@@ -12,8 +18,8 @@ def generate_launch_description():
         ),
         Node(
             package='my_aruco_detector',
-            executable='full_sensor_fusion_node',
-            name='sensor_fusion',
+            executable='sensor_fusion_node_fixed',
+            name='sensor_fusion_fixed',
             output='screen'
         ),
         Node(
@@ -22,7 +28,4 @@ def generate_launch_description():
             name='forklift_display',
             output='screen'
         ),
-
     ])
-
-
