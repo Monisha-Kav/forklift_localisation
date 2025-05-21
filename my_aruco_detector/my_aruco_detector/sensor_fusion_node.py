@@ -1,99 +1,125 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Header
+from tf_transformations import quaternion_matrix
 import numpy as np
 import math
 
-class SensorFusionNode(Node):
+class BayesFilterNode(Node):
     def __init__(self):
-        super().__init__('sensor_fusion_node')
+        super().__init__('bayes_filter_node')
 
-        # Pose state: x, y, theta
-        self.state = np.array([0.0, 0.0, 0.0])
-        self.last_time = self.get_clock().now()
+        # State: [x, y, theta]
+        self.state = np.zeros(3)
+        self.velocity = np.zeros(2)
+        self.P = np.eye(3) * 0.01
 
-        # Last known motion
-        self.ax = 0.0
-        self.ay = 0.0
-        self.omega = 0.0
-        self.v = 0.0
+        self.process_noise = np.diag([0.05, 0.05, 0.01])
+        self.measurement_noise = np.diag([0.1, 0.1, 0.05])
 
-        self.alpha = 0.9  # Trust in IMU; 1-alpha trust in marker
+        self.last_time = None
+
+        self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, 10)
+        self.marker_sub = self.create_subscription(PoseStamped, '/marker_pose', self.marker_callback, 10)
         self.pose_pub = self.create_publisher(PoseStamped, '/fused_pose', 10)
 
-        # Subscriptions
-        # SUBSCRIBE to /calibrated_imu now, not /imu
-        self.create_subscription(Imu, '/calibrated_imu', self.imu_callback, 10)
-        self.create_subscription(PoseStamped, '/marker_pose', self.marker_callback, 10)
-
-        # Continuous update timer (Bayes prediction step)
-        self.timer = self.create_timer(0.05, self.update_state)  # 20 Hz
-
-    def imu_callback(self, msg):
-        self.ax = msg.linear_acceleration.x
-        self.ay = msg.linear_acceleration.y
-        self.omega = msg.angular_velocity.z
-
-    def update_state(self):
-        now = self.get_clock().now()
-        dt = (now - self.last_time).nanoseconds * 1e-9
-        self.last_time = now
-
-        if dt <= 0 or dt > 1:
+    def imu_callback(self, msg: Imu):
+        curr_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        if self.last_time is None:
+            self.last_time = curr_time
             return
+        dt = curr_time - self.last_time
+        self.last_time = curr_time
 
-        x, y, theta = self.state
+        # Extract quaternion orientation
+        q = msg.orientation
+        quat = [q.x, q.y, q.z, q.w]
 
-        # Update rotation
-        dtheta = self.omega * dt
-        theta += dtheta
+        # Rotation matrix
+        R = quaternion_matrix(quat)[:3, :3]
 
-        # Update velocity
-        acceleration_threshold = 0.2
-        if abs(self.ax) > acceleration_threshold:
-            self.v += self.ax * dt
+        # Raw acceleration in body frame
+        ax = msg.linear_acceleration.x
+        ay = msg.linear_acceleration.y
+        az = msg.linear_acceleration.z
+        acc_body = np.array([ax, ay, az])
+
+        # Rotate to world frame
+        acc_world = R @ acc_body
+
+        # Subtract gravity in world frame
+        gravity_world = R @ np.array([0.0, 0.0, 9.81])
+        acc_world -= gravity_world
+
+        # Use x and y
+        acc_xy = acc_world[:2]
+
+        # Thresholding
+        accel_thresh = 0.2
+        acc_xy[np.abs(acc_xy) < accel_thresh] = 0.0
+
+
+        # If stationary, slowly decay velocity
+        if np.allclose(acc_xy, 0.0, atol=1e-3):
+            self.velocity *= 0.9
         else:
-            # Decay velocity when no major acceleration
-            self.v *= 0.98
+            self.velocity += acc_xy * dt
+            self.state[0:2] += self.velocity * dt
 
-        self.v = np.clip(self.v, -1.0, 1.0)
+        # Yaw (theta) update from quaternion
+        siny_cosp = 2 * (q.w * q.z + q.x * q.y)
+        cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
+        theta = math.atan2(siny_cosp, cosy_cosp)
+        self.state[2] = theta
 
-        # Update position
-        dx = self.v * math.cos(theta) * dt
-        dy = self.v * math.sin(theta) * dt
-        x += dx
-        y += dy
+        # Clamp small velocity drift
+        self.velocity[np.abs(self.velocity) < 1e-3] = 0.0
 
-        self.state = np.array([x, y, theta])
+        # Predict covariance
+        self.P += self.process_noise * dt
+
         self.publish_pose()
 
-    def marker_callback(self, msg):
-        measured_x = msg.pose.position.x
-        measured_y = msg.pose.position.y
-        qz = msg.pose.orientation.z
-        qw = msg.pose.orientation.w
-        measured_theta = 2 * np.arctan2(qz, qw)
+    def marker_callback(self, msg: PoseStamped):
+        z = np.array([msg.pose.position.x, msg.pose.position.y])
 
-        measured_pose = np.array([measured_x, measured_y, measured_theta])
-        self.state = self.alpha * self.state + (1 - self.alpha) * measured_pose
+        # Kalman gain
+        H = np.array([[1, 0, 0],
+                      [0, 1, 0]])
+        S = H @ self.P @ H.T + self.measurement_noise[:2, :2]
+        K = self.P @ H.T @ np.linalg.inv(S)
 
-        self.get_logger().info(f"[RESET] Corrected pose: {self.state}")
+        # Update state and covariance
+        self.state[0:2] += K @ (z - H @ self.state)
+        self.P = (np.eye(3) - K @ H) @ self.P
+
+        self.publish_pose()
 
     def publish_pose(self):
         pose_msg = PoseStamped()
+        pose_msg.header = Header()
         pose_msg.header.stamp = self.get_clock().now().to_msg()
-        pose_msg.header.frame_id = 'map'
-        pose_msg.pose.position.x = float(self.state[0])
-        pose_msg.pose.position.y = float(self.state[1])
+        pose_msg.header.frame_id = "map"
+        pose_msg.pose.position.x = self.state[0]
+        pose_msg.pose.position.y = self.state[1]
         pose_msg.pose.position.z = 0.0
-        pose_msg.pose.orientation.z = np.sin(self.state[2] / 2)
-        pose_msg.pose.orientation.w = np.cos(self.state[2] / 2)
+
+        # Convert yaw to quaternion
+        theta = self.state[2]
+        pose_msg.pose.orientation.w = math.cos(theta / 2)
+        pose_msg.pose.orientation.z = math.sin(theta / 2)
+        pose_msg.pose.orientation.x = 0.0
+        pose_msg.pose.orientation.y = 0.0
+
         self.pose_pub.publish(pose_msg)
 
 def main(args=None):
     rclpy.init(args=args)
-    node = SensorFusionNode()
+    node = BayesFilterNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
