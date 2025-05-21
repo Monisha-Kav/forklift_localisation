@@ -34,7 +34,7 @@ class MarkerDetector(Node):
         self.parameters = cv2.aruco.DetectorParameters_create()
 
         # Load marker positions and goals
-        yaml_path = '/home/monisha/turtlebot3_ws/src/my_aruco_detector/my_aruco_detector/aruco_marker_map.yaml'
+        yaml_path = '/home/aditi/turtlebot3_ws/src/my_aruco_detector/my_aruco_detector/aruco_marker_map.yaml'
         with open(yaml_path, 'r') as f:
             marker_map = yaml.safe_load(f)
 
@@ -65,6 +65,20 @@ class MarkerDetector(Node):
                 rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(corners, self.marker_length, self.camera_matrix, self.dist_coeffs)
                 for i in range(len(ids)):
                     marker_id = int(ids[i][0])
+
+                    # Set axis color and label color
+                    is_goal = marker_id in self.goal_markers
+                    axis_length = 0.02  # 2 cm
+                    color = (0, 255, 0) if is_goal else (255, 0, 0)  # Green for goal, Blue for regular
+
+                    # Draw the axis (OpenCV uses internal color logic, draw with default for all)
+                    cv2.aruco.drawAxis(frame, self.camera_matrix, self.dist_coeffs, rvecs[i], tvecs[i], axis_length)
+
+                    # Draw the marker ID
+                    c = corners[i][0].mean(axis=0).astype(int)
+                    label = f"Goal ID: {marker_id}" if is_goal else f"ID: {marker_id}"
+                    cv2.putText(frame, label, (c[0], c[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
 
                     # First, if it is a goal marker
                     if marker_id in self.goal_markers:

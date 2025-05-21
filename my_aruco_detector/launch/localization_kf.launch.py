@@ -12,16 +12,15 @@ def generate_launch_description():
         ),
         Node(
             package='my_aruco_detector',
-            executable='real_ekf',
+            executable='kf_full_sensor_fusion_m',
             name='sensor_fusion',
             output='screen'
         ),
         Node(
             package='my_aruco_detector',
-            executable='forklift_display',
+            executable='new_forklift_display',
             name='forklift_display',
             output='screen'
         ),
 
     ])
-

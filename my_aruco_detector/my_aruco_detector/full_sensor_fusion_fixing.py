@@ -16,9 +16,9 @@ class FullSensorFusionNode(Node):
 
         self.last_time = self.get_clock().now()
 
-        # Trust weights (alpha = prediction, (1-alpha) = correction)
-        self.odom_alpha = 0.8       # Trust IMU more than odom
-        self.marker_alpha = 0.5     # Trust IMU and ArUco equally
+        self.odom_alpha = 0.6
+        self.marker_alpha = 0.5
+        self.imu_marker_alpha = 0.9  # theta: trust IMU more than ArUco
 
         self.create_subscription(Imu, '/imu', self.imu_callback, 10)
         self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
@@ -27,11 +27,12 @@ class FullSensorFusionNode(Node):
 
         self.timer = self.create_timer(0.05, self.update_state)  # 20 Hz
 
+    def normalize_angle(self, angle):
+        return (angle + np.pi) % (2 * np.pi) - np.pi
+
     def imu_callback(self, msg):
-        # Update angular velocity
         self.omega = msg.angular_velocity.z
 
-        # Integrate linear acceleration to velocity
         current_time = self.get_clock().now()
         dt = (current_time - self.last_time).nanoseconds * 1e-9
         if dt <= 0 or dt > 1.0:
@@ -39,7 +40,7 @@ class FullSensorFusionNode(Node):
 
         raw_ax = msg.linear_acceleration.x
         theta = self.state[2]
-        ax_world = raw_ax - 9.8 * math.sin(theta)  # remove gravity projection
+        ax_world = raw_ax - 9.8 * math.sin(theta)
 
         if abs(ax_world) < 0.2:
             ax_world = 0.0
@@ -53,30 +54,37 @@ class FullSensorFusionNode(Node):
     def odom_callback(self, msg):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
-        qz = msg.pose.pose.orientation.z
-        qw = msg.pose.pose.orientation.w
-        theta = 2 * np.arctan2(qz, qw)
 
-        measured = np.array([x, y, theta])
-        self.state = self.odom_alpha * self.state + (1 - self.odom_alpha) * measured
+        # Only use x and y (not theta)
+        measured = np.array([x, y])
+        self.state[0:2] = self.odom_alpha * self.state[0:2] + (1 - self.odom_alpha) * measured
 
     def marker_callback(self, msg):
         x = msg.pose.position.x
         y = msg.pose.position.y
         qz = msg.pose.orientation.z
         qw = msg.pose.orientation.w
-        theta = 2 * np.arctan2(qz, qw)
+        marker_theta = 2 * np.arctan2(qz, qw)
 
-        measured = np.array([x, y, theta])
-        self.state = self.marker_alpha * self.state + (1 - self.marker_alpha) * measured
+        # Position correction (same as before)
+        measured_xy = np.array([x, y])
+        self.state[0:2] = self.marker_alpha * self.state[0:2] + (1 - self.marker_alpha) * measured_xy
+
+        # Orientation correction like sensor_fusion_node_drift.py
+        self.state[2] = self.imu_marker_alpha * self.state[2] + (1 - self.imu_marker_alpha) * marker_theta
+        self.state[2] = self.normalize_angle(self.state[2])
 
     def update_state(self):
-        dt = 0.05  # 20 Hz
+        dt = 0.05
         dx = self.vx * math.cos(self.state[2]) * dt
         dy = self.vx * math.sin(self.state[2]) * dt
         dtheta = self.omega * dt
 
-        self.state += np.array([dx, dy, dtheta])
+        self.state[0] += dx
+        self.state[1] += dy
+        self.state[2] += dtheta
+        self.state[2] = self.normalize_angle(self.state[2])
+
         self.publish_pose()
 
     def publish_pose(self):
@@ -86,12 +94,9 @@ class FullSensorFusionNode(Node):
         pose_msg.pose.position.x = float(self.state[0])
         pose_msg.pose.position.y = float(self.state[1])
         pose_msg.pose.position.z = 0.0
-
         pose_msg.pose.orientation.z = math.sin(self.state[2] / 2.0)
         pose_msg.pose.orientation.w = math.cos(self.state[2] / 2.0)
-
         self.pose_pub.publish(pose_msg)
-
 
 def main(args=None):
     rclpy.init(args=args)
