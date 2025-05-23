@@ -24,29 +24,29 @@ class MarkerDetector(Node):
 
         # Camera parameters
         self.camera_matrix = np.array([
-            [506.7045, 0, 317.0278],
-            [0, 506.7707, 231.4871],
-            [0, 0, 1]
+            [920.7894, 0, 589.1690],
+            [0, 919.1768, 541.4353],
+            [0, 0, 1.0000]
         ], dtype=np.float32)
-        self.dist_coeffs = np.array([[0.182278215942289], [-0.306125275008631], [0], [0], [0]], dtype=np.float32)
+        self.dist_coeffs = np.array([[0.205245304646941], [-0.332544106955044], [0], [0], [0]], dtype=np.float32)
 
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_250)
         self.parameters = cv2.aruco.DetectorParameters_create()
 
         # Load marker positions and goals
-        yaml_path = '/home/aditi/turtlebot3_ws/src/my_aruco_detector/my_aruco_detector/aruco_marker_map.yaml'
+        yaml_path = '/home/monisha/turtlebot3_ws/src/my_aruco_detector/my_aruco_detector/aruco_marker_map.yaml'
         with open(yaml_path, 'r') as f:
             marker_map = yaml.safe_load(f)
 
         self.marker_world_positions = {}
         self.goal_markers = {}
         for marker_id, data in marker_map.items():
-            if 'position' in data and 'yaw' in data:
-                self.marker_world_positions[int(marker_id)] = [
-                    data['position'][0],
-                    data['position'][1],
-                    data['yaw']
-                ]
+            if 'position' in data and 'orientation' in data:
+                self.marker_world_positions[int(marker_id)] = {
+                    'position': data['position'],
+                    'orientation': data['orientation']
+                }
+
             if 'goal' in data:
                 self.goal_markers[int(marker_id)] = data['goal']
 
@@ -63,6 +63,7 @@ class MarkerDetector(Node):
 
             if ids is not None:
                 rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(corners, self.marker_length, self.camera_matrix, self.dist_coeffs)
+
                 for i in range(len(ids)):
                     marker_id = int(ids[i][0])
 
@@ -99,20 +100,42 @@ class MarkerDetector(Node):
                     # For pillar markers: do localization reset
                     tvec = tvecs[i].reshape((3, 1))
                     rvec = rvecs[i].reshape((3, 1))
+
                     R_m_c, _ = cv2.Rodrigues(rvec)
                     T_m_c = np.eye(4)
                     T_m_c[:3, :3] = R_m_c
                     T_m_c[:3, 3] = tvec[:, 0]
 
+                    # Convert marker pose from camera frame to robot frame
+                    # T_cam_to_robot = np.array([
+                    #     [ 0,  0, 1, 0],  # x_robot = z_cam
+                    #     [-1,  0, 0, 0],  # y_robot = -x_cam
+                    #     [ 0, -1, 0, 0],  # z_robot = -y_cam
+                    #     [ 0,  0, 0, 1]
+                    # ])
+                    
+                    # T_m_r = T_cam_to_robot @ T_m_c
+
+                    # T_r_m = np.linalg.inv(T_m_r)
+
                     T_c_m = np.linalg.inv(T_m_c)
 
-                    x, y, yaw = self.marker_world_positions[marker_id]
-                    R_w_m = tf_transformations.euler_matrix(0, 0, yaw)[:3, :3]
-                    T_w_m = np.eye(4)
-                    T_w_m[:3, :3] = R_w_m
-                    T_w_m[:3, 3] = [x, y, 0.0]
+                    marker_data = self.marker_world_positions[marker_id]
+                    pos = marker_data['position']
+                    quat = marker_data['orientation']  # [x, y, z, w]
 
+                    T_w_m = tf_transformations.quaternion_matrix(quat)
+                    T_w_m[:3, 3] = [pos[0], pos[1], pos[2]]  # include Z from YAML
+
+                    # T_w_r = T_w_m @ T_r_m
                     T_w_c = T_w_m @ T_c_m
+                    
+                    # print("marker wrt camera", T_m_c)
+                    # print("camera wrt marker", T_c_m)
+                    # print("marker wrt world", T_w_m)
+                    
+                    # print("camera wrt world", T_w_c)
+                    
                     cam_pos = T_w_c[:3, 3]
                     roll, pitch, yaw_robot = tf_transformations.euler_from_matrix(T_w_c)
 
@@ -120,7 +143,7 @@ class MarkerDetector(Node):
                     pose_msg.header.stamp = self.get_clock().now().to_msg()
                     pose_msg.header.frame_id = 'map'
                     pose_msg.pose.position.x = float(cam_pos[0])
-                    pose_msg.pose.position.y = float(cam_pos[2])
+                    pose_msg.pose.position.y = float(cam_pos[1])
                     pose_msg.pose.position.z = 0.0
                     pose_msg.pose.orientation.z = np.sin(yaw_robot / 2)
                     pose_msg.pose.orientation.w = np.cos(yaw_robot / 2)
@@ -132,7 +155,7 @@ class MarkerDetector(Node):
                     t_robot.header.frame_id = 'map'
                     t_robot.child_frame_id = 'base_link'
                     t_robot.transform.translation.x = float(cam_pos[0])
-                    t_robot.transform.translation.y = float(cam_pos[2])
+                    t_robot.transform.translation.y = float(cam_pos[1])
                     t_robot.transform.translation.z = 0.0
                     quat = tf_transformations.quaternion_from_euler(roll, pitch, yaw_robot)
                     t_robot.transform.rotation.x = quat[0]

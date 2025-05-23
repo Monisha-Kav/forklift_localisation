@@ -1,22 +1,65 @@
-# Normal world-fixed markers
-6:
-  position: [1.0, 1.0]
-  yaw: 0.0
-2:
-  position: [2.0, 3.5]
-  yaw: 1.57
-3:
-  position: [1.0, 1.0]
-  yaw: 0.0
-4:
-  position: [0, 0.85]
-  yaw: 1.57
+# # Normal world-fixed markers
+# 6:
+#   position: [1.0, 1.0]
+#   yaw: 0.0
+# 2:
+#   position: [2.0, 3.5]
+#   yaw: 1.57
+# 3:
+#   position: [1.0, 1.0]
+#   yaw: 0.0
+# 4:
+#   position: [0.15, 0.85]
+#   yaw: -1.57
   
+# 1:
+#   position: [1.0, 1.0]
+#   yaw: 0.0
+
+# # Special crate marker (ID 6)
+# 5:
+#   goal: [0.5, 0.5]  # This is the destination the robot must go to
+  
+#  # If your coordinate frame is defined as: +X = East (E), +Y = North (N)
+#  # Then your angles (θ, or yaw) follow standard mathematical (ROS) convention:
+#  # θ = 0 → Facing East (positive X)
+#  # θ = +π/2 → Facing North (positive Y)
+#  # θ = ±π → Facing West (negative X)
+#  # θ = -π/2 → Facing South (negative Y)
+
+
+
+# Orientation map
+
+# | Marker Facing | Meaning                     | Quaternion                  |
+# | ------------- | --------------------------- | --------------------------- |
+# | +X (East)     | Right wall facing into room | `[0.0, 0.0, -0.707, 0.707]` |
+# | -X (West)     | Left wall                   | `[0.0, 0.0, 0.707, 0.707]`  |
+# | +Y (North)    | Back wall                   | `[0.0, 0.0, 1.0, 0.0]`      |
+# | -Y (South)    | Front wall (facing South) ✅ | `[0.0, 0.0, 0.0, 1.0]`      |
+
+
+6:
+  position: [1.0, 1.0, 0.5]
+  orientation: [0.0, 0.0, 0.0, 1.0]
+
+2:
+  position: [2.0, 3.5, 0.5]
+  orientation: [0.0, 0.0, 0.0, 1.0]
+
+3:
+  position: [1.0, 1.0, 0.5]
+  orientation: [0.0, 0.0, 0.0, 1.0]
+
+4:
+  position: [0.15, 0.85, 0.5]
+  orientation: [0.0, 0.0, 0.0, 1.0]
+
 1:
-  position: [1.0, 1.0]
-  yaw: 0.0
+  position: [1.0, 1.0, 0.5]
+  orientation: [0.0, 0.0, 0.0, 1.0]
+
 
 # Special crate marker (ID 6)
 5:
   goal: [0.5, 0.5]  # This is the destination the robot must go to
-

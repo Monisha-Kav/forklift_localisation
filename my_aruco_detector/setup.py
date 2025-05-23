@@ -27,6 +27,7 @@ setup(
         	'markwe_pose_detect = my_aruco_detector.markwe_pose_detect:main',
         	'markwe_pose_localise = my_aruco_detector.markwe_pose_localise:main',
         	'marker_pose_localise = my_aruco_detector.marker_pose_localise:main',
+        	'marker_pose_localise_new = my_aruco_detector.marker_pose_localise_new:main',
             	'sensor_fusion_node = my_aruco_detector.sensor_fusion_node:main',
             	'sensor_fusion_node_drift = my_aruco_detector.sensor_fusion_node_drift:main',
             	'sensor_fusion_node_fixed = my_aruco_detector.sensor_fusion_node_fixed:main',

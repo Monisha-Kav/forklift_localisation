@@ -5,6 +5,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 import numpy as np
 import math
+from std_msgs.msg import Bool
 
 class KalmanFilterNode(Node):
     def __init__(self):
@@ -37,6 +38,14 @@ class KalmanFilterNode(Node):
 
         self.log_file = open('/tmp/mahalanobis_log.txt', 'w')  # Or choose your own path
         self.log_file.write("timestamp,mahalanobis_distance,accepted\n")
+
+        self.marker_buffer = []
+        self.marker_reset_done = False
+        self.marker_first_seen_time = None
+        
+        self.calibrated_pub = self.create_publisher(Bool, '/calibration_status', 10)
+
+
 
 
     def normalize_angle(self, angle):
@@ -122,6 +131,54 @@ class KalmanFilterNode(Node):
     #     self.marker_visible = True
 
 
+    # def marker_callback(self, msg):
+    #     now = self.get_clock().now()
+    #     if (now - self.last_marker_update_time) < self.marker_update_interval:
+    #         return
+    #     self.last_marker_update_time = now
+
+    #     x = msg.pose.position.x
+    #     y = msg.pose.position.y
+    #     qz = msg.pose.orientation.z
+    #     qw = msg.pose.orientation.w
+    #     theta = 2 * np.arctan2(qz, qw)
+
+    #     # Smooth the marker pose
+    #     if self.last_marker_pose is not None:
+    #         x = self.alpha * self.last_marker_pose[0] + (1 - self.alpha) * x
+    #         y = self.alpha * self.last_marker_pose[1] + (1 - self.alpha) * y
+    #         theta = self.alpha * self.last_marker_pose[2] + (1 - self.alpha) * theta
+
+    #     self.last_marker_pose = (x, y, theta)
+
+    #     z = np.array([[x], [y], [self.normalize_angle(theta)]])
+    #     H = np.zeros((3, 5))
+    #     H[0, 0] = 1
+    #     H[1, 1] = 1
+    #     H[2, 2] = 1
+
+    #     y_residual = z - H @ self.state
+    #     y_residual[2, 0] = self.normalize_angle(y_residual[2, 0])
+    #     S = H @ self.P @ H.T + self.R_marker
+    #     mahalanobis_dist = y_residual.T @ np.linalg.inv(S) @ y_residual
+
+    #     threshold = 33 # 99.99% confidence
+
+    #     timestamp = now.to_msg().sec + now.to_msg().nanosec * 1e-9
+    #     accepted = mahalanobis_dist < threshold
+
+    #     # Write to file
+    #     self.log_file.write(f"{timestamp:.6f},{mahalanobis_dist[0, 0]:.4f},{int(accepted)}\n")
+    #     self.log_file.flush()
+
+    #     if accepted:
+    #         self.get_logger().info(f"Marker accepted: Mahalanobis = {mahalanobis_dist[0, 0]:.2f}")
+    #         self.marker_visible = True
+    #         self.kalman_update(z, H, self.R_marker)
+    #     else:
+    #         self.marker_visible = False
+    #         self.get_logger().warn(f"Marker rejected: Mahalanobis = {mahalanobis_dist[0, 0]:.2f}")
+
     def marker_callback(self, msg):
         now = self.get_clock().now()
         if (now - self.last_marker_update_time) < self.marker_update_interval:
@@ -134,41 +191,45 @@ class KalmanFilterNode(Node):
         qw = msg.pose.orientation.w
         theta = 2 * np.arctan2(qz, qw)
 
-        # Smooth the marker pose
-        if self.last_marker_pose is not None:
-            x = self.alpha * self.last_marker_pose[0] + (1 - self.alpha) * x
-            y = self.alpha * self.last_marker_pose[1] + (1 - self.alpha) * y
-            theta = self.alpha * self.last_marker_pose[2] + (1 - self.alpha) * theta
+        if self.marker_reset_done:
+            return
 
-        self.last_marker_pose = (x, y, theta)
+        if self.marker_first_seen_time is None:
+            self.marker_first_seen_time = now
+            self.marker_buffer = []
+            self.get_logger().info("Started buffering marker data...")
 
-        z = np.array([[x], [y], [self.normalize_angle(theta)]])
-        H = np.zeros((3, 5))
-        H[0, 0] = 1
-        H[1, 1] = 1
-        H[2, 2] = 1
+        self.marker_buffer.append((x, y, theta))
 
-        y_residual = z - H @ self.state
-        y_residual[2, 0] = self.normalize_angle(y_residual[2, 0])
-        S = H @ self.P @ H.T + self.R_marker
-        mahalanobis_dist = y_residual.T @ np.linalg.inv(S) @ y_residual
+        time_elapsed = (now - self.marker_first_seen_time).nanoseconds * 1e-9
+        if time_elapsed < 3.0:
+            self.get_logger().info(f"Buffering marker... ({time_elapsed:.1f}s)")
+            return
 
-        threshold = 33 # 99.99% confidence
+        # 🟢 Only gets here AFTER 3 seconds
+        avg_x = np.mean([p[0] for p in self.marker_buffer])
+        avg_y = np.mean([p[1] for p in self.marker_buffer])
+        thetas = [p[2] for p in self.marker_buffer]
+        avg_theta = math.atan2(np.mean([math.sin(t) for t in thetas]),
+                            np.mean([math.cos(t) for t in thetas]))
 
-        timestamp = now.to_msg().sec + now.to_msg().nanosec * 1e-9
-        accepted = mahalanobis_dist < threshold
+        self.state[0, 0] = avg_x
+        self.state[1, 0] = avg_y
+        self.state[2, 0] = self.normalize_angle(avg_theta)
+        self.state[3, 0] = 0.0
+        self.state[4, 0] = 0.0
 
-        # Write to file
-        self.log_file.write(f"{timestamp:.6f},{mahalanobis_dist[0, 0]:.4f},{int(accepted)}\n")
-        self.log_file.flush()
+        self.get_logger().info(f"Pose RESET using marker avg: x={avg_x:.2f}, y={avg_y:.2f}, theta={avg_theta:.2f}")
 
-        if accepted:
-            self.get_logger().info(f"Marker accepted: Mahalanobis = {mahalanobis_dist[0, 0]:.2f}")
-            self.marker_visible = True
-            self.kalman_update(z, H, self.R_marker)
-        else:
-            self.marker_visible = False
-            self.get_logger().warn(f"Marker rejected: Mahalanobis = {mahalanobis_dist[0, 0]:.2f}")
+        self.marker_reset_done = True
+        self.marker_first_seen_time = None
+        self.marker_buffer = []
+
+        # Publish calibration success
+        msg = Bool()
+        msg.data = True
+        self.calibrated_pub.publish(msg)
+
 
     def kalman_update(self, z, H, R):
         y = z - H @ self.state
