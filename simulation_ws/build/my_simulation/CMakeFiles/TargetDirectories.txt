@@ -1,9 +1,0 @@
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/uninstall.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/my_simulation_uninstall.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/test.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/edit_cache.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/rebuild_cache.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/list_install_components.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/install.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/install/local.dir
-/home/monisha/simulation_ws/build/my_simulation/CMakeFiles/install/strip.dir
