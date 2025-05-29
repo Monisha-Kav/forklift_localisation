@@ -9,7 +9,7 @@
 #   position: [1.0, 1.0]
 #   yaw: 0.0
 # 4:
-#   position: [0.15, 0.85]
+#   position: [0.10, 1.00]
 #   yaw: -1.57
   
 # 1:
@@ -25,7 +25,7 @@
 #  # θ = 0 → Facing East (positive X)
 #  # θ = +π/2 → Facing North (positive Y)
 #  # θ = ±π → Facing West (negative X)
-#  # θ = -π/2 → Facing South (negative Y)
+# #  # θ = -π/2 → Facing South (negative Y)
 
 
 
@@ -52,8 +52,8 @@
   orientation: [0.0, 0.0, 0.0, 1.0]
 
 4:
-  position: [0.15, 0.85, 0.5]
-  orientation: [0.0, 0.0, 0.0, 1.0]
+  position: [0.15, 1.00, 0.5]
+  orientation: [0.0, 0.0, 0.707, 0.707]
 
 1:
   position: [1.0, 1.0, 0.5]

@@ -3,15 +3,21 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
+from launch.actions import SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 from launch.actions import TimerAction
+from launch.substitutions import Command
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+
 
 def generate_launch_description():
     launch_file_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
+    pkg_share = get_package_share_directory('my_simulation')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     x_pose = LaunchConfiguration('x_pose', default='0.0')
@@ -20,25 +26,16 @@ def generate_launch_description():
     world = os.path.join(
         get_package_share_directory('my_simulation'),
         'worlds',
-        'sim_world_mod.world'
-    )
-
-    delete_burger = ExecuteProcess(
-        cmd=['ros2', 'service', 'call', '/delete_entity', 'gazebo_msgs/srv/DeleteEntity',
-             '{"name": "burger"}'],
-        output='screen',
-        # Only wait briefly as the service might not be immediately available
-        emulate_tty=True
-    )
-
-    delete_camera = ExecuteProcess(
-        cmd=['ros2', 'service', 'call', '/delete_entity', 'gazebo_msgs/srv/DeleteEntity',
-             '{"name": "camera"}'],
-        output='screen',
-        # Only wait briefly as the service might not be immediately available
-        emulate_tty=True
+        # 'sim_world_mod.world'
+        'world1'
     )
     
+    set_gazebo_model_path = SetEnvironmentVariable(
+    name='GAZEBO_MODEL_PATH',
+    value=os.path.join(pkg_share, 'models')
+    )
+
+
     gzserver_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
@@ -69,19 +66,15 @@ def generate_launch_description():
         }.items()
     )
 
-
-    # Path to camera model file (can also be 'model://camera' for built-in models)
-    camera_model_path = '/home/monisha/simulation_ws/src/my_simulation/models/camera/model.sdf'
-
     spawn_camera = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
         arguments=[
         '-entity', 'camera',
-        '-file', camera_model_path,
-        '-x', '0.0',
-        '-y', '-2.0',
-        '-z', '1.0'
+        '-file', os.path.join(pkg_share,'models','camera','model.sdf'),
+        '-x', '0.075',
+        '-y', '0',
+        '-z', '0.105'
         ],
         output='screen'
     )
@@ -95,7 +88,7 @@ def generate_launch_description():
     
     # Delay it by 1 second
     delayed_camera_node = TimerAction(
-        period=2.0,
+        period=4.0,
         actions=[camera_follower_node]
     )
 
@@ -105,12 +98,14 @@ def generate_launch_description():
     # Add the commands to the launch description
     # ld.add_action(delete_burger)
     # ld.add_action(delete_camera)
+    ld.add_action(set_gazebo_model_path)
     ld.add_action(gzserver_cmd)
     ld.add_action(gzclient_cmd)
     ld.add_action(robot_state_publisher_cmd)
     ld.add_action(spawn_turtlebot_cmd)
     ld.add_action(spawn_camera)
     ld.add_action(delayed_camera_node)
+    # ld.add_action(spawn_aruco)
 
     return ld
 

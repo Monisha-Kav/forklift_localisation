@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
@@ -6,6 +8,9 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 import transforms3d
+import yaml
+from ament_index_python.packages import get_package_share_directory
+import os
 
 
 class ArucoDetector(Node):
@@ -16,10 +21,8 @@ class ArucoDetector(Node):
         self.dist_coeffs = None
         self.got_camera_info = False
 
-        # Camera info subscriber
+        # Subscriptions
         self.create_subscription(CameraInfo, '/my_camera/camera/camera_info', self.camera_info_callback, 10)
-
-        # Image subscriber
         self.create_subscription(Image, '/my_camera/camera/image_raw', self.image_callback, 10)
 
         # Publisher
@@ -27,13 +30,34 @@ class ArucoDetector(Node):
 
         # ArUco setup
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_250)
-        self.parameters = cv2.aruco.DetectorParameters_create()
-        self.marker_length = 0.03  # meters
+        self.parameters = cv2.aruco.DetectorParameters()
+        self.detector = cv2.aruco.ArucoDetector(self.aruco_dict, self.parameters)
+
+        # Marker size (side length in meters)
+        self.marker_length = 0.125
+
+        # Load marker poses from YAML
+        pkg_path = get_package_share_directory('my_simulation')
+        yaml_path = os.path.join(pkg_path, 'config', 'marker_poses.yaml')
+        self.marker_world_poses = self.load_marker_world_poses(yaml_path)
+
+        self.get_logger().info(f"Using OpenCV version: {cv2.__version__}")
+
+    def load_marker_world_poses(self, filepath):
+        with open(filepath, 'r') as f:
+            data = yaml.safe_load(f)
+        poses = {}
+        for marker_id, info in data['markers'].items():
+            pos = np.array(info['position'])  # [x, y, z]
+            quat = np.array(info['orientation'])  # [x, y, z, w]
+            quat = np.roll(quat, 1)
+            poses[int(marker_id)] = (pos, quat)
+        return poses
 
     def camera_info_callback(self, msg):
         if not self.got_camera_info:
             self.camera_matrix = np.array(msg.k).reshape((3, 3))
-            self.dist_coeffs = np.array(msg.d)
+            self.dist_coeffs = np.array(msg.d).reshape((1, -1))
             self.got_camera_info = True
             self.get_logger().info("Camera info received.")
 
@@ -44,35 +68,93 @@ class ArucoDetector(Node):
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-            # Detect markers
-            corners, ids, _ = cv2.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
+            corners, ids, _ = self.detector.detectMarkers(gray)
 
             if ids is not None:
-                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    corners, self.marker_length, self.camera_matrix, self.dist_coeffs)
+                for i, corner in enumerate(corners):
+                    marker_id = int(ids[i][0])
+                    if marker_id not in self.marker_world_poses:
+                        self.get_logger().warn(f"Marker ID {marker_id} not found in world YAML.")
+                        continue
 
-                for i in range(len(ids)):
-                    pos = tvecs[i].ravel()
-                    rotation_matrix, _ = cv2.Rodrigues(rvecs[i])
-                    quat = transforms3d.quaternions.mat2quat(rotation_matrix)
-                    _, _, yaw = transforms3d.euler.mat2euler(rotation_matrix, axes='sxyz')
+                    # Estimate pose of the marker w.r.t. camera frame
+                    marker_half = self.marker_length / 2.0
+                    obj_points = np.array([
+                        [-marker_half,  marker_half, 0],
+                        [ marker_half,  marker_half, 0],
+                        [ marker_half, -marker_half, 0],
+                        [-marker_half, -marker_half, 0]
+                    ], dtype=np.float32)
 
+                    success, rvec, tvec = cv2.solvePnP(
+                        obj_points,
+                        corner[0],
+                        self.camera_matrix,
+                        self.dist_coeffs,
+                        flags=cv2.SOLVEPNP_IPPE_SQUARE
+                    )
+
+                    self.get_logger().info(f"tvec: {tvec.flatten()} rvec: {rvec.flatten()}")
+
+                    if not success:
+                        self.get_logger().warn("Pose estimation failed.")
+                        continue
+
+                    # Pose estimation
+                    R_cm, _ = cv2.Rodrigues(rvec)
+                    T_cm = np.eye(4)
+                    T_cm[:3, :3] = R_cm
+                    T_cm[:3, 3] = tvec.flatten()
+
+                    # OpenCV to Gazebo transform
+                    T_cv_to_gazebo = np.array([
+                        [ 0,  0,  -1, 0],
+                        [ 1,  0,  0, 0],
+                        [ 0, -1,  0, 0],
+                        [ 0,  0,  0, 1]
+                    ])
+
+                    # Get marker's world pose
+                    marker_pos, marker_quat = self.marker_world_poses[marker_id]
+                    R_wm = transforms3d.quaternions.quat2mat(marker_quat)
+                    T_wm = np.eye(4)
+                    T_wm[:3, :3] = R_wm
+                    T_wm[:3, 3] = marker_pos
+
+                    # Camera pose in world frame
+                    T_wc = T_wm @ np.linalg.inv(T_cv_to_gazebo @ T_cm @ np.linalg.inv(T_cv_to_gazebo))
+
+                    ### the following is a fix for camera orientation being turned 180 degrees about the z-axis
+                    ### please do note that there's probably a better way to do this, but this works for now
+                    R_fix = transforms3d.euler.euler2mat(0, 0, np.pi)
+                    T_fix = np.eye(4)
+                    T_fix[:3, :3] = R_fix
+
+                    T_wc = T_wc @ T_fix 
+
+                    # Extract position and quaternion
+                    camera_pos = T_wc[:3, 3]
+                    camera_rot = T_wc[:3, :3]
+                    camera_quat = transforms3d.quaternions.mat2quat(camera_rot)
+
+                    axes_length = 0.2
+
+                    # Publish pose
                     pose_msg = PoseStamped()
                     pose_msg.header.stamp = self.get_clock().now().to_msg()
-                    pose_msg.header.frame_id = 'my_camera_optical_frame'
-                    pose_msg.pose.position.x = pos[0]
-                    pose_msg.pose.position.y = pos[1]
-                    pose_msg.pose.position.z = pos[2]
-                    pose_msg.pose.orientation.x = quat[1]
-                    pose_msg.pose.orientation.y = quat[2]
-                    pose_msg.pose.orientation.z = quat[3]
-                    pose_msg.pose.orientation.w = quat[0]
+                    pose_msg.header.frame_id = 'world'
+                    pose_msg.pose.position.x = float(camera_pos[0])
+                    pose_msg.pose.position.y = float(camera_pos[1])
+                    pose_msg.pose.position.z = float(camera_pos[2])
+                    pose_msg.pose.orientation.x = float(camera_quat[1])
+                    pose_msg.pose.orientation.y = float(camera_quat[2])
+                    pose_msg.pose.orientation.z = float(camera_quat[3])
+                    pose_msg.pose.orientation.w = float(camera_quat[0])
                     self.pose_pub.publish(pose_msg)
 
-                    # Visualize
+                    # Visual feedback
                     cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-                    cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvecs[i], tvecs[i], self.marker_length)
+                    cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
 
             cv2.imshow("Aruco Detection", frame)
             cv2.waitKey(1)
@@ -92,4 +174,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

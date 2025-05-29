@@ -12,7 +12,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/localization_ekf.launch.py']),
         ('share/' + package_name + '/launch', ['launch/localization_kf.launch.py']),
         ('share/' + package_name + '/launch', ['launch/localisation_bayes_prefuckup.launch.py']),
-        ('share/' + package_name + '/launch', ['launch/trial.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/localization_imu_lidar.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/localization_imu_calibrated.launch.py']),
         ('share/' + package_name + '/' + package_name, ['my_aruco_detector/aruco_marker_map.yaml']),
     ],
     install_requires=['setuptools'],
@@ -41,6 +42,9 @@ setup(
             	'real_ekf=my_aruco_detector.real_ekf:main',
             	'kf_full_sensor_fusion_m=my_aruco_detector.kf_full_sensor_fusion_m:main',
             	'kf_full_sensor_fusion=my_aruco_detector.kf_full_sensor_fusion:main',
+            	'imu_lidar_new=my_aruco_detector.imu_lidar_new:main',
+            	'imu_calibration= my_aruco_detector.imu_calibration:main',
+            	
         ],
     },
 )
