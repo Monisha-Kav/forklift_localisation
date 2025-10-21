@@ -114,7 +114,7 @@ The Forklift Display (forklift_display.py / new_forklift_display.py) provides a 
 
 ## Additional Materials
 
-A separate folder contains:
+A separate folder (project media) contains:
 
 - Final presentation slides (containing the details of the projec, and the implementation stages)
 - Videos demonstrating localization results for different filters throughout project development.
